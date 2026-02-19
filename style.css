@@ -1,0 +1,246 @@
+.gchw-shadow {
+    box-shadow: 0px 0px 25px 0px rgba(67,69,73,0.2);
+}
+/*
+selector.elementor-sticky--effects {
+    background: var(--e-global-color-text) !important;
+    transition: background 0.5s linear;
+}
+
+
+
+@keyframes blink_smooth {
+    40% {
+        opacity: 0.4;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    600% {
+        opacity: 0.6;
+    }
+    70% {
+        opacity: 0.7;
+    }
+    80% {
+        opacity: 0.8;
+    }
+    90% {
+        opacity: 0.9;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+:root {
+    --blink-dauer: 3s;
+}
+
+.golf-status {
+  padding: 2px 6px;
+  border-radius: 5px;
+  font-weight: 600;
+  font-size: 10px;
+  margin-left: 8px;
+  animation: blink_smooth var(--blink-dauer) infinite;
+}
+
+.status-geöffnet .elementor-icon svg {
+  fill: var(--e-global-color-f0679ea)!important;
+}
+
+.status-gesperrt .elementor-icon svg {
+  fill: var(--e-global-color-08a52db)!important;
+}
+
+.status-verboten .elementor-icon svg {
+  fill: var(--e-global-color-08a52db)!important;
+}
+
+.status-turnier .elementor-icon svg {
+  fill: var(--e-global-color-ba02126)!important;
+}
+
+.status-Frost .elementor-icon svg {
+  fill: var(--e-global-color-053d5ce)!important;
+}
+
+.status-Wintergrüns .elementor-icon svg {
+  fill: var(--e-global-color-7b4c615)!important;
+}
+*/
+
+
+
+
+
+/* ===================================================
+   Platzstatus – Premium Glass Frame
+   Wrapper: .platzstatus-wrap
+=================================================== */
+
+.platzstatus-wrap,
+.platzstatus-wrap * {
+  box-sizing: border-box;
+}
+
+/* ===================================================
+   NOW – Embedded Glass Cards
+=================================================== */
+
+.platzstatus-wrap .ps-now{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+  margin: 28px 0;
+}
+
+/* =========================
+   CARD BASIS
+========================= */
+
+.platzstatus-wrap .ps-now .ps-card{
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  padding: 16px 18px;
+  min-height: 64px;
+
+  /* Glasfläche */
+  background: rgba(12, 20, 16, 0.16);
+  backdrop-filter: blur(10px) saturate(120%);
+  -webkit-backdrop-filter: blur(10px) saturate(120%);
+
+  /* echter 8px Rahmen */
+  border-style: solid;
+  border-width: 0 8px;
+  border-color: transparent;
+
+  border-radius: 16px;
+
+  /* sehr dezente Tiefe */
+  box-shadow:
+    0 8px 18px rgba(0,0,0,0.18),
+    inset 0 1px 0 rgba(255,255,255,0.12);
+
+  transition: none !important;
+  transform: none !important;
+}
+
+/* Hover neutral */
+.platzstatus-wrap .ps-now .ps-card:hover{
+  transform:none !important;
+}
+
+/* Text */
+.platzstatus-wrap .ps-now .ps-title{
+  font-size:14px;
+  font-weight:600;
+  margin:0 0 4px 0;
+  color:rgba(255,255,255,0.92);
+  letter-spacing:0.02em;
+}
+
+.platzstatus-wrap .ps-now .ps-sub{
+  font-size:13px;
+  color:rgba(255,255,255,0.74);
+}
+
+/* Dot deaktivieren */
+.platzstatus-wrap .ps-now .ps-dot{
+  display:none !important;
+}
+
+/* ===================================================
+   PREMIUM GLASS RAHMEN
+   -> transluzent + innerer Lichtreflex
+=================================================== */
+
+/* GRÜN */
+.platzstatus-wrap .ps-now .ps-sev-10,
+.platzstatus-wrap .ps-now .ps-status--open,
+.platzstatus-wrap .ps-now .ps-status--ecarts_allowed{
+  border-left-color: rgba(0, 128, 0, 0.5);
+  border-right-color: rgba(0, 128, 0, 0.5);
+
+  box-shadow:
+    0 8px 18px rgba(0,0,0,0.18),
+    inset 8px 0 10px rgba(255,255,255,0.06),
+    inset -8px 0 10px rgba(255,255,255,0.06);
+}
+
+/* GELB */
+.platzstatus-wrap .ps-now .ps-sev-60,
+.platzstatus-wrap .ps-now .ps-status--restricted{
+  border-left-color: rgba(205,175,90,0.68);
+  border-right-color: rgba(205,175,90,0.68);
+
+  box-shadow:
+    0 8px 18px rgba(0,0,0,0.18),
+    inset 8px 0 10px rgba(255,255,255,0.06),
+    inset -8px 0 10px rgba(255,255,255,0.06);
+}
+
+/* ROT */
+.platzstatus-wrap .ps-now .ps-sev-90,
+.platzstatus-wrap .ps-now .ps-status--closed,
+.platzstatus-wrap .ps-now .ps-status--ecarts_forbidden{
+  border-left-color: rgba(102, 0, 0, 0.5);
+  border-right-color: rgba(102, 0, 0, 0.5);
+
+  box-shadow:
+    0 8px 18px rgba(0,0,0,0.18),
+    inset 8px 0 10px rgba(255,255,255,0.05),
+    inset -8px 0 10px rgba(255,255,255,0.05);
+}
+
+/* ===================================================
+   TABLE – clean
+=================================================== */
+
+.platzstatus-wrap .ps-table-wrap{
+  margin: 28px 0;
+  width:100%;
+  overflow-x:auto;
+}
+
+.platzstatus-wrap .ps-table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  table-layout:fixed;
+}
+
+.platzstatus-wrap .ps-table th{
+  background:transparent;
+  border:0;
+  padding:14px 16px;
+  text-align:left;
+  font-weight:600;
+  font-size:13px;
+  letter-spacing:0.06em;
+  opacity:0.75;
+}
+
+.platzstatus-wrap .ps-table td{
+  border:0;
+  padding:16px 16px;
+  font-size:14px;
+}
+
+.platzstatus-wrap .ps-table tbody tr:nth-child(odd){
+  background:rgba(0,0,0,0.03);
+}
+
+.platzstatus-wrap .ps-table .ps-dot{
+  display:none !important;
+}
+
+@media (max-width:768px){
+  .platzstatus-wrap .ps-now{
+    grid-template-columns:1fr;
+  }
+}
