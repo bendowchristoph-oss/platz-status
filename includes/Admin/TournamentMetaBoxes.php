@@ -58,15 +58,13 @@ final class TournamentMetaBoxes
 
         $enableScorecards = (int) get_post_meta($postId, TournamentOptions::META_ENABLE_SCORECARDS, true) === 1;
 
-        // Optionales Feedback nach Save
         if (!empty($_GET['ps_saved'])) {
             echo '<p style="margin:0 0 10px 0; color:#1d7f2a;"><strong>Gespeichert.</strong></p>';
         }
 
-        // Hidden fields innerhalb des WP-Hauptformulars (kein nested form!)
+        // Nonce + post_id im bestehenden WP-Hauptformular (kein nested form!)
         wp_nonce_field(self::NONCE_ACTION, self::NONCE_NAME);
         ?>
-        <input type="hidden" name="action" value="<?php echo esc_attr(self::ACTION); ?>">
         <input type="hidden" name="post_id" value="<?php echo esc_attr((string) $postId); ?>">
 
         <p style="margin:0 0 10px 0;">
@@ -102,7 +100,7 @@ final class TournamentMetaBoxes
                 type="submit"
                 class="button button-primary"
                 style="width:100%;"
-                formaction="<?php echo esc_url(admin_url('admin-post.php')); ?>"
+                formaction="<?php echo esc_url(admin_url('admin-post.php?action=' . self::ACTION)); ?>"
                 formmethod="post"
             >
                 Turnier-Optionen speichern
