@@ -13,9 +13,7 @@ final class TournamentMetaBoxes
 
     public static function register(): void
     {
-        // Caps self-heal (falls activation hook nicht sauber lief)
         add_action('init', [self::class, 'ensureCaps'], 1);
-
         add_action('add_meta_boxes', [self::class, 'addMetaBox']);
         add_action('save_post', [self::class, 'savePost'], 10, 2);
     }
@@ -103,7 +101,6 @@ final class TournamentMetaBoxes
             return;
         }
 
-        // Autosave / Revisionen ignorieren
         if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
             return;
         }
@@ -111,7 +108,6 @@ final class TournamentMetaBoxes
             return;
         }
 
-        // Nonce prüfen (Classic + Block-Editor/REST robust)
         $ownNonceOk = !empty($_POST[self::NONCE_NAME])
             && wp_verify_nonce((string) $_POST[self::NONCE_NAME], self::NONCE_ACTION);
 
@@ -127,28 +123,19 @@ final class TournamentMetaBoxes
             return;
         }
 
-        // Capability prüfen
         if (!current_user_can(Capabilities::CAP)) {
             return;
         }
 
-        // 1) Turnier-Flag
         $isTournament = !empty($_POST['ps_is_tournament']) ? 1 : 0;
         update_post_meta($postId, TournamentOptions::META_IS_TOURNAMENT, $isTournament);
 
-        // 2) Löcher nur 9/18
         $holes = isset($_POST['ps_holes']) ? (int) $_POST['ps_holes'] : 18;
         if ($holes !== 9 && $holes !== 18) {
             $holes = 18;
         }
         update_post_meta($postId, TournamentOptions::META_HOLES, $holes);
 
-        /**
-         * 3) Scorecards:
-         * Block-Editor kann Requests schicken, in denen einzelne Metabox-Felder fehlen.
-         * -> nur schreiben, wenn Feld tatsächlich im Request enthalten ist
-         * -> wenn Turnier deaktiviert wird, Scorecards zwangsweise aus
-         */
         $postedEnable = array_key_exists('ps_enable_scorecards', $_POST);
 
         if ($postedEnable) {
