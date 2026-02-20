@@ -10,13 +10,20 @@ final class TournamentMetaBoxes
 {
     private const NONCE_ACTION = 'ps_save_tournament_options';
     private const NONCE_NAME   = 'ps_tournament_nonce';
-    private const ACTION       = 'ps_save_tournament_options';
+    private const ACTION_SAVE  = 'ps_save_tournament_options';
+    private const PAGE_SLUG    = 'platzstatus-tournament-options';
 
     public static function register(): void
     {
         add_action('init', [self::class, 'ensureCaps'], 1);
+
         add_action('add_meta_boxes', [self::class, 'addMetaBox']);
-        add_action('admin_post_' . self::ACTION, [self::class, 'handleSave']);
+
+        // Separate admin page (stable form submit)
+        add_action('admin_menu', [self::class, 'registerAdminPage']);
+
+        // Save handler for the separate page
+        add_action('admin_post_' . self::ACTION_SAVE, [self::class, 'handleSave']);
     }
 
     public static function ensureCaps(): void
@@ -33,14 +40,27 @@ final class TournamentMetaBoxes
         add_meta_box(
             'ps_tournament_options',
             'Turnier-Optionen',
-            [self::class, 'renderBox'],
+            [self::class, 'renderMetaBox'],
             $pt,
             'side',
             'default'
         );
     }
 
-    public static function renderBox(\WP_Post $post): void
+    public static function registerAdminPage(): void
+    {
+        // hidden page (no menu entry), opened via link from metabox
+        add_submenu_page(
+            null,
+            'Turnier-Optionen',
+            'Turnier-Optionen',
+            Capabilities::CAP,
+            self::PAGE_SLUG,
+            [self::class, 'renderAdminPage']
+        );
+    }
+
+    public static function renderMetaBox(\WP_Post $post): void
     {
         if (!current_user_can(Capabilities::CAP)) {
             echo '<p>Keine Berechtigung.</p>';
@@ -49,64 +69,93 @@ final class TournamentMetaBoxes
 
         $postId = (int) $post->ID;
 
-        $isTournament = TournamentOptions::isTournament($postId);
+        $url = add_query_arg(
+            ['page' => self::PAGE_SLUG, 'post_id' => $postId],
+            admin_url('admin.php')
+        );
 
+        $enabled = (int) get_post_meta($postId, TournamentOptions::META_ENABLE_SCORECARDS, true) === 1;
+        $isTournament = TournamentOptions::isTournament($postId);
+        $holes = TournamentOptions::holes($postId);
+
+        echo '<p style="margin:0 0 10px 0;">Status: '
+            . ($isTournament ? '<strong>Turnier</strong>' : '<strong>Kein Turnier</strong>')
+            . ' • Löcher: <strong>' . esc_html((string)$holes) . '</strong>'
+            . ' • Scorecards: ' . ($enabled ? '<strong>an</strong>' : '<strong>aus</strong>')
+            . '</p>';
+
+        echo '<p style="margin:0;">'
+            . '<a class="button button-primary" style="width:100%; text-align:center;" href="'
+            . esc_url($url)
+            . '">Turnier-Optionen bearbeiten</a></p>';
+
+        echo '<p class="description" style="margin-top:8px;">'
+            . 'Speichern erfolgt über eine separate Seite (stabil im Block-Editor).'
+            . '</p>';
+    }
+
+    public static function renderAdminPage(): void
+    {
+        if (!current_user_can(Capabilities::CAP)) {
+            wp_die('Keine Berechtigung.');
+        }
+
+        $postId = isset($_GET['post_id']) ? (int) $_GET['post_id'] : 0;
+        if ($postId <= 0) {
+            wp_die('Ungültige post_id.');
+        }
+
+        $pt = TournamentOptions::impactPostType();
+        if (get_post_type($postId) !== $pt) {
+            wp_die('Falscher Post Type.');
+        }
+
+        $isTournament = TournamentOptions::isTournament($postId);
         $holes = TournamentOptions::holes($postId);
         if ($holes !== 9 && $holes !== 18) {
             $holes = 18;
         }
-
         $enableScorecards = (int) get_post_meta($postId, TournamentOptions::META_ENABLE_SCORECARDS, true) === 1;
 
+        $actionUrl = admin_url('admin-post.php');
+        $backUrl = add_query_arg(['post' => $postId, 'action' => 'edit'], admin_url('post.php'));
+
+        echo '<div class="wrap">';
+        echo '<h1>Turnier-Optionen</h1>';
+        echo '<p><a href="' . esc_url($backUrl) . '">&larr; zurück zum Ereignis</a></p>';
+
         if (!empty($_GET['ps_saved'])) {
-            echo '<p style="margin:0 0 10px 0; color:#1d7f2a;"><strong>Gespeichert.</strong></p>';
+            echo '<div class="notice notice-success"><p><strong>Gespeichert.</strong></p></div>';
         }
 
-        // Nonce + post_id im bestehenden WP-Hauptformular (kein nested form!)
+        echo '<form method="post" action="' . esc_url($actionUrl) . '">';
+        echo '<input type="hidden" name="action" value="' . esc_attr(self::ACTION_SAVE) . '">';
+        echo '<input type="hidden" name="post_id" value="' . esc_attr((string)$postId) . '">';
         wp_nonce_field(self::NONCE_ACTION, self::NONCE_NAME);
-        ?>
-        <input type="hidden" name="post_id" value="<?php echo esc_attr((string) $postId); ?>">
 
-        <p style="margin:0 0 10px 0;">
-            <label>
-                <input type="checkbox" name="ps_is_tournament" value="1" <?php checked($isTournament, true); ?>>
-                <strong>Dieses Ereignis ist ein Turnier</strong>
-            </label>
-        </p>
+        echo '<table class="form-table" role="presentation"><tbody>';
 
-        <p style="margin:0 0 10px 0;">
-            <label for="ps_holes"><strong>Löcher</strong></label><br>
-            <select id="ps_holes" name="ps_holes" style="width:100%;">
-                <option value="9"  <?php selected($holes, 9);  ?>>9</option>
-                <option value="18" <?php selected($holes, 18); ?>>18</option>
-            </select>
-        </p>
+        echo '<tr><th scope="row">Turnier</th><td>';
+        echo '<label><input type="checkbox" name="ps_is_tournament" value="1" ' . checked($isTournament, true, false) . '> Dieses Ereignis ist ein Turnier</label>';
+        echo '</td></tr>';
 
-        <p style="margin:0 0 10px 0;">
-            <label>
-                <input type="checkbox" name="ps_enable_scorecards" value="1" <?php checked($enableScorecards, true); ?>>
-                Loch-für-Loch Erfassung
-            </label>
-        </p>
+        echo '<tr><th scope="row">Löcher</th><td>';
+        echo '<select name="ps_holes">';
+        echo '<option value="9" ' . selected($holes, 9, false) . '>9</option>';
+        echo '<option value="18" ' . selected($holes, 18, false) . '>18</option>';
+        echo '</select>';
+        echo '</td></tr>';
 
-        <?php if (!$isTournament): ?>
-            <p class="description" style="margin:0 0 10px 0;">
-                Hinweis: Wenn „Turnier“ nicht aktiv ist, werden Scorecards beim Speichern automatisch deaktiviert.
-            </p>
-        <?php endif; ?>
+        echo '<tr><th scope="row">Scorecards</th><td>';
+        echo '<label><input type="checkbox" name="ps_enable_scorecards" value="1" ' . checked($enableScorecards, true, false) . '> Loch-für-Loch Erfassung</label>';
+        echo '<p class="description">Nur aktiv, wenn Turnier aktiv ist.</p>';
+        echo '</td></tr>';
 
-        <p style="margin:0;">
-            <button
-                type="submit"
-                class="button button-primary"
-                style="width:100%;"
-                formaction="<?php echo esc_url(admin_url('admin-post.php?action=' . self::ACTION)); ?>"
-                formmethod="post"
-            >
-                Turnier-Optionen speichern
-            </button>
-        </p>
-        <?php
+        echo '</tbody></table>';
+
+        submit_button('Speichern');
+        echo '</form>';
+        echo '</div>';
     }
 
     public static function handleSave(): void
@@ -142,8 +191,8 @@ final class TournamentMetaBoxes
         update_post_meta($postId, TournamentOptions::META_ENABLE_SCORECARDS, $enableScorecards);
 
         $url = add_query_arg(
-            ['post' => $postId, 'action' => 'edit', 'ps_saved' => '1'],
-            admin_url('post.php')
+            ['page' => self::PAGE_SLUG, 'post_id' => $postId, 'ps_saved' => '1'],
+            admin_url('admin.php')
         );
         wp_safe_redirect($url);
         exit;
