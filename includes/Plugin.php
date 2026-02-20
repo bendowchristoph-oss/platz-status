@@ -59,3 +59,13 @@ final class Plugin
         }
     }
 }
+
+/**
+ * Force Classic Editor for Impact post type
+ * (Gutenberg REST causes unreliable metabox checkbox saving)
+ */
+add_filter('use_block_editor_for_post_type', static function ($use, $postType) {
+    $impact = \PlatzStatus\Services\TournamentOptions::impactPostType();
+    return ($postType === $impact) ? false : $use;
+}, 10, 2);
+
